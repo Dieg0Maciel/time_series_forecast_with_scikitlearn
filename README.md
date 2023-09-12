@@ -233,7 +233,7 @@ plt.show()
 
 
     
-![png](output_8_0.png)
+![](/images/output_8_0.png)
     
 
 
@@ -457,13 +457,13 @@ plt.show()
 
 
     
-![png](output_20_0.png)
+![](/images/output_20_0.png)
     
 
 
 
     
-![png](output_20_1.png)
+![](/images/output_20_1.png)
     
 
 
@@ -479,7 +479,7 @@ plt.show()
 
 
     
-![png](output_21_0.png)
+![](/images/output_21_0.png)
     
 
 
@@ -502,7 +502,7 @@ plt.show()
 
 
     
-![png](output_22_0.png)
+![](/images/output_22_0.png)
     
 
 
@@ -519,7 +519,7 @@ plt.show()
 
 
     
-![png](output_24_0.png)
+![](/images/output_24_0.png)
     
 
 
@@ -550,7 +550,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_26_1.png)
+![](/images/output_26_1.png)
     
 
 
@@ -577,7 +577,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_27_1.png)
+![](/images/output_27_1.png)
     
 
 
@@ -607,7 +607,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_28_1.png)
+![](/images/output_28_1.png)
     
 
 
@@ -635,7 +635,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_29_1.png)
+![](/images/output_29_1.png)
     
 
 
@@ -651,7 +651,6 @@ g.map_offdiag(sns.scatterplot)
 
 ## 8. REFERENCES
 
-* [Project link](https://github.com/Dieg0Maciel/time_series_forecast_with_scikitlearn)
 * [Temperature prediction time series](https://www.kaggle.com/code/tudorpreduna/temperature-pred-time-series)
 * [Time Series Forecasting with XGBoost](https://www.youtube.com/watch?v=vV12dGe_Fho)
 * [Finding Seasonal Trends in Time-Series Data with Python](https://towardsdatascience.com/finding-seasonal-trends-in-time-series-data-with-python-ce10c37aa861)
