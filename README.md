@@ -251,7 +251,7 @@ plt.show()
 
 
     
-![png](output_8_0.png)
+![](images/output_8_0.png)
     
 
 
@@ -475,13 +475,13 @@ plt.show()
 
 
     
-![png](output_20_0.png)
+![](images/output_20_0.png)
     
 
 
 
     
-![png](output_20_1.png)
+![](images/output_20_1.png)
     
 
 
@@ -497,7 +497,7 @@ plt.show()
 
 
     
-![png](output_21_0.png)
+![](images/output_21_0.png)
     
 
 
@@ -520,7 +520,7 @@ plt.show()
 
 
     
-![png](output_22_0.png)
+![](images/output_22_0.png)
     
 
 
@@ -537,7 +537,7 @@ plt.show()
 
 
     
-![png](output_24_0.png)
+![](images/output_24_0.png)
     
 
 
@@ -568,7 +568,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_26_1.png)
+![](images/output_26_1.png)
     
 
 
@@ -595,7 +595,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_27_1.png)
+![](images/output_27_1.png)
     
 
 
@@ -625,7 +625,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_28_1.png)
+![](images/output_28_1.png)
     
 
 
@@ -653,7 +653,7 @@ g.map_offdiag(sns.scatterplot)
 
 
     
-![png](output_29_1.png)
+![](images/output_29_1.png)
     
 
 
@@ -682,7 +682,7 @@ plt.show()
 
 
     
-![png](output_31_0.png)
+![](images/output_31_0.png)
     
 
 
@@ -740,7 +740,7 @@ fi.sort_values(by='Importance', ascending=False)
 
 
     
-![png](output_33_0.png)
+![](images/output_33_0.png)
     
 
 
@@ -872,7 +872,7 @@ plt.show()
 
 
     
-![png](output_35_0.png)
+![](images/output_35_0.png)
     
 
 
