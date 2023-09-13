@@ -10,17 +10,16 @@
     * 2-5. Time series components
     * 2-6. Linear correlations: Heatmap and Scatterplots
 3. MODEL SELECTION
-4. TRAINING AND EVALUATION
-5. PREDICTIONS
-6. CONCLUSION
-7. FUTURE WORK
-8. REFERENCES
+4. TRAINING, EVALUATION AND PREDICTIONS 
+5. CONCLUSION
+6. FUTURE WORK
+7. REFERENCES
 
 ## 1. OVERVIEW
 
 In this project we will use the [Austin Weather](https://www.kaggle.com/datasets/grubenm/austin-weather) dataset provided by [Kaggle](https://www.kaggle.com/) to forecast the average temperature in Austin Texas using SciKit-Learn.
 
-We can extend this dataset or create a dataset for another city using a weather API like [Weather API](https://www.weatherapi.com/) following the steps from the project [ETL PIPELINE WITH PYTHON AND AIRFLOW](https://github.com/Dieg0Maciel/etl_pipeline_with_python_and_airflow) where we studied how to build a pipeline in order to manipulate weather forecast data provided by the [Open Weather](https://openweathermap.org/) API. 
+We can extend this dataset or create a dataset for another city using a weather API like [Weather API](https://www.weatherapi.com/) following the steps from the previous project [ETL PIPELINE WITH PYTHON AND AIRFLOW](https://github.com/Dieg0Maciel/etl_pipeline_with_python_and_airflow) where we studied how to build a pipeline in order to manipulate weather forecast data provided by the [Open Weather](https://openweathermap.org/) API. 
 
 
 ## 2. DATA EXPLORATION AND FEATURE ENGINEERIG
@@ -37,10 +36,29 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import xgboost as xgb
 
+from pandas.plotting import autocorrelation_plot, lag_plot
 from statsmodels.tsa.seasonal import seasonal_decompose
-from pandas.plotting import autocorrelation_plot
-from pandas.plotting import lag_plot
+
+
+# SciKit Learn
+from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, Normalizer, OrdinalEncoder
+from sklearn.compose import make_column_selector, make_column_transformer
+from sklearn.pipeline import make_pipeline
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.model_selection import cross_val_score, KFold, TimeSeriesSplit, train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+# Skforecast
+from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
+from skforecast.ForecasterAutoregDirect import ForecasterAutoregDirect
+from skforecast.model_selection import grid_search_forecaster, backtesting_forecaster
+from skforecast.utils import save_forecaster, load_forecaster
 ```
 
 
@@ -220,7 +238,7 @@ plt.show()
 
 
     
-![](/images/output_7_0.png)
+![png](output_7_0.png)
     
 
 
@@ -233,7 +251,7 @@ plt.show()
 
 
     
-![](/images/output_8_0.png)
+![png](output_8_0.png)
     
 
 
@@ -457,13 +475,13 @@ plt.show()
 
 
     
-![](/images/output_20_0.png)
+![png](output_20_0.png)
     
 
 
 
     
-![](/images/output_20_1.png)
+![png](output_20_1.png)
     
 
 
@@ -479,7 +497,7 @@ plt.show()
 
 
     
-![](/images/output_21_0.png)
+![png](output_21_0.png)
     
 
 
@@ -502,7 +520,7 @@ plt.show()
 
 
     
-![](/images/output_22_0.png)
+![png](output_22_0.png)
     
 
 
@@ -519,7 +537,7 @@ plt.show()
 
 
     
-![](/images/output_24_0.png)
+![png](output_24_0.png)
     
 
 
@@ -544,20 +562,20 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fb7807806a0>
+    <seaborn.axisgrid.PairGrid at 0x7fde95f80cc0>
 
 
 
 
     
-![](/images/output_26_1.png)
+![png](output_26_1.png)
     
 
 
 
 ```python
 numeric_cols = [
-    'TempHighF',
+    'TempAvgF',
     'HumidityHighPercent',
     'HumidityAvgPercent',
     'HumidityLowPercent',
@@ -571,20 +589,20 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fb77dc36208>
+    <seaborn.axisgrid.PairGrid at 0x7fde94681a58>
 
 
 
 
     
-![](/images/output_27_1.png)
+![png](output_27_1.png)
     
 
 
 
 ```python
 numeric_cols = [
-    'TempHighF',
+    'TempAvgF',
     'SeaLevelPressureHighInches',
     'SeaLevelPressureAvgInches',
     'SeaLevelPressureLowInches',
@@ -601,20 +619,20 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fb77d5a8588>
+    <seaborn.axisgrid.PairGrid at 0x7fde933bc908>
 
 
 
 
     
-![](/images/output_28_1.png)
+![png](output_28_1.png)
     
 
 
 
 ```python
 numeric_cols = [
-    'TempHighF',
+    'TempAvgF',
     'WindHighMPH',
     'WindAvgMPH',
     'WindGustMPH',
@@ -629,36 +647,259 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fb77ad2c908>
+    <seaborn.axisgrid.PairGrid at 0x7fde8fe7beb8>
 
 
 
 
     
-![](/images/output_29_1.png)
+![png](output_29_1.png)
     
 
 
-## 3. MODEL SELECTION
+## 3. MODEL SELECTION AND TRAINING
 
-## 4. TRAINING AND EVALUATION
 
-## 5. PREDICTIONS 
+```python
+"""Train-Test Split"""
+label = 'TempAvgF'
+features = data.columns.tolist()
+features.remove(label)
+X = data[features]
+y = data[label]
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=0, shuffle=False
+)
 
-## 6. CONCLUSION 
+# Plot train-test split
+fig, ax = plt.subplots(figsize=(15, 5))
+y_train.plot(ax=ax, label='Training Set', title='Data Train/Test Split')
+y_test.plot(ax=ax, label='Test Set')
+ax.axvline(y_test.index[0], color='black', ls='--')
+ax.legend(['Training Set', 'Test Set'])
+plt.show()
+```
 
-## 7. FUTURE WORK
 
-## 8. REFERENCES
+    
+![png](output_31_0.png)
+    
+
+
+
+```python
+""" Model"""
+reg = xgb.XGBRegressor(base_score=0.5, booster='gbtree',    
+                       n_estimators=1000,
+                       early_stopping_rounds=50,
+                       objective='reg:linear',
+                       max_depth=3,
+                       learning_rate=0.01)
+
+"""Training"""
+reg.fit(X_train, y_train)
+```
+
+    [17:05:17] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
+    [17:05:17] WARNING: ../src/learner.cc:576: 
+    Parameters: { "early_stopping_rounds" } might not be used.
+    
+      This could be a false alarm, with some parameters getting used by language bindings but
+      then being mistakenly passed down to XGBoost core, or some parameter actually being used
+      but getting flagged wrongly here. Please open an issue if you find any such cases.
+    
+    
+
+
+
+
+
+    XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
+                 colsample_bynode=1, colsample_bytree=1, early_stopping_rounds=50,
+                 enable_categorical=False, gamma=0, gpu_id=-1, importance_type=None,
+                 interaction_constraints='', learning_rate=0.01, max_delta_step=0,
+                 max_depth=3, min_child_weight=1, missing=nan,
+                 monotone_constraints='()', n_estimators=1000, n_jobs=4,
+                 num_parallel_tree=1, objective='reg:linear', predictor='auto',
+                 random_state=0, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
+                 subsample=1, tree_method='exact', validate_parameters=1,
+                 verbosity=None)
+
+
+
+
+```python
+"""Feature Importance"""
+feat_imp = reg.get_booster().get_score(importance_type='gain')
+fi = pd.DataFrame({'Features':list(feat_imp.keys()), 'Importance':list(feat_imp.values())})
+fi = fi.set_index('Features')
+fi.sort_values('Importance').plot(kind='barh', title='Feature Importance')
+plt.show()
+fi.sort_values(by='Importance', ascending=False)
+```
+
+
+    
+![png](output_33_0.png)
+    
+
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Importance</th>
+    </tr>
+    <tr>
+      <th>Features</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>TempLowF</th>
+      <td>2852.476807</td>
+    </tr>
+    <tr>
+      <th>TempHighF</th>
+      <td>1948.614380</td>
+    </tr>
+    <tr>
+      <th>WindHighMPH</th>
+      <td>5.346092</td>
+    </tr>
+    <tr>
+      <th>SeaLevelPressureAvgInches</th>
+      <td>5.065269</td>
+    </tr>
+    <tr>
+      <th>DewPointAvgF</th>
+      <td>4.841939</td>
+    </tr>
+    <tr>
+      <th>DewPointHighF</th>
+      <td>4.246740</td>
+    </tr>
+    <tr>
+      <th>HumidityAvgPercent</th>
+      <td>4.043171</td>
+    </tr>
+    <tr>
+      <th>VisibilityAvgMiles</th>
+      <td>3.772969</td>
+    </tr>
+    <tr>
+      <th>VisibilityHighMiles</th>
+      <td>3.277313</td>
+    </tr>
+    <tr>
+      <th>SeaLevelPressureLowInches</th>
+      <td>2.765399</td>
+    </tr>
+    <tr>
+      <th>Rain</th>
+      <td>2.146742</td>
+    </tr>
+    <tr>
+      <th>HumidityLowPercent</th>
+      <td>1.449736</td>
+    </tr>
+    <tr>
+      <th>VisibilityLowMiles</th>
+      <td>1.237300</td>
+    </tr>
+    <tr>
+      <th>HumidityHighPercent</th>
+      <td>1.188487</td>
+    </tr>
+    <tr>
+      <th>SeaLevelPressureHighInches</th>
+      <td>1.075164</td>
+    </tr>
+    <tr>
+      <th>WindGustMPH</th>
+      <td>1.068728</td>
+    </tr>
+    <tr>
+      <th>DewPointLowF</th>
+      <td>0.906050</td>
+    </tr>
+    <tr>
+      <th>PrecipitationSumInches</th>
+      <td>0.757577</td>
+    </tr>
+    <tr>
+      <th>WindAvgMPH</th>
+      <td>0.676285</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+## 4. EVALUATION AND PREDICTIONS 
+
+
+```python
+"""Predictions"""
+predictions = reg.predict(X_test)
+y_pred = pd.DataFrame(data=predictions, index=y_test.index, columns=['Predictions'])
+
+fig, ax = plt.subplots(figsize=(15, 5))
+y_test.plot(ax=ax, label='Test Set')
+y_pred.plot(ax=ax, label='Predictions')
+ax.legend(['Test Set', 'Predictions'])
+plt.show()
+```
+
+
+    
+![png](output_35_0.png)
+    
+
+
+
+```python
+score = mean_absolute_error(y_test.values, y_pred.values)
+print(f'MAE Score on Test set: {score:0.2f}')
+```
+
+    MAE Score on Test set: 0.42
+
+
+## 5. CONCLUSION 
+
+## 6. FUTURE WORK
+
+## 7. REFERENCES
 
 * [Temperature prediction time series](https://www.kaggle.com/code/tudorpreduna/temperature-pred-time-series)
 * [Time Series Forecasting with XGBoost](https://www.youtube.com/watch?v=vV12dGe_Fho)
 * [Finding Seasonal Trends in Time-Series Data with Python](https://towardsdatascience.com/finding-seasonal-trends-in-time-series-data-with-python-ce10c37aa861)
 * [Complete Guide on Time Series Analysis in Python](https://www.kaggle.com/code/prashant111/complete-guide-on-time-series-analysis-in-python)
 * [Time Series as Features](https://www.kaggle.com/code/ryanholbrook/time-series-as-features)
+* [Skforecast: time series forecasting with Python and Scikit-learn](https://cienciadedatos.net/documentos/py27-time-series-forecasting-python-scikitlearn.html)
+* [How to do Time Series Split using Sklearn](https://medium.com/@Stan_DS/timeseries-split-with-sklearn-tips-8162c83612b9)
 
 
 ```python
 
 ```
-
