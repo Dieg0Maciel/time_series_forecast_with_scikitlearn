@@ -231,6 +231,146 @@ pd.DataFrame.from_dict(data_description, orient="index")
 
 
 ```python
+"""
+As we can see: TempAvgF = (TempHighF + TempLowF)/2
+"""
+temp_comparison = pd.DataFrame()
+temp_comparison["TempAvgF"] = data["TempAvgF"]
+temp_comparison["(TempHighF + TempLowF)/2"] = (data["TempHighF"]+data["TempLowF"])/2
+temp_comparison
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>TempAvgF</th>
+      <th>(TempHighF + TempLowF)/2</th>
+    </tr>
+    <tr>
+      <th>Date</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2013-12-21</th>
+      <td>60</td>
+      <td>59.5</td>
+    </tr>
+    <tr>
+      <th>2013-12-22</th>
+      <td>48</td>
+      <td>47.5</td>
+    </tr>
+    <tr>
+      <th>2013-12-23</th>
+      <td>45</td>
+      <td>45.0</td>
+    </tr>
+    <tr>
+      <th>2013-12-24</th>
+      <td>46</td>
+      <td>46.0</td>
+    </tr>
+    <tr>
+      <th>2013-12-25</th>
+      <td>50</td>
+      <td>49.5</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2017-07-27</th>
+      <td>89</td>
+      <td>89.0</td>
+    </tr>
+    <tr>
+      <th>2017-07-28</th>
+      <td>91</td>
+      <td>90.5</td>
+    </tr>
+    <tr>
+      <th>2017-07-29</th>
+      <td>92</td>
+      <td>92.0</td>
+    </tr>
+    <tr>
+      <th>2017-07-30</th>
+      <td>93</td>
+      <td>92.5</td>
+    </tr>
+    <tr>
+      <th>2017-07-31</th>
+      <td>88</td>
+      <td>88.0</td>
+    </tr>
+  </tbody>
+</table>
+<p>1319 rows × 2 columns</p>
+</div>
+
+
+
+
+```python
+"""
+We are going to keep only the avg columns
+"""
+
+columns_to_drop = [
+    'TempHighF', 'TempLowF', 'DewPointHighF', 'DewPointLowF', 
+    'HumidityHighPercent', 'HumidityLowPercent', 
+    'SeaLevelPressureHighInches', 'SeaLevelPressureLowInches',
+    'VisibilityHighMiles',  'VisibilityLowMiles'
+]
+
+data.drop(columns_to_drop, axis=1, inplace=True)
+data.info()
+```
+
+    <class 'pandas.core.frame.DataFrame'>
+    DatetimeIndex: 1319 entries, 2013-12-21 to 2017-07-31
+    Data columns (total 10 columns):
+     #   Column                     Non-Null Count  Dtype 
+    ---  ------                     --------------  ----- 
+     0   TempAvgF                   1319 non-null   int64 
+     1   DewPointAvgF               1319 non-null   object
+     2   HumidityAvgPercent         1319 non-null   object
+     3   SeaLevelPressureAvgInches  1319 non-null   object
+     4   VisibilityAvgMiles         1319 non-null   object
+     5   WindHighMPH                1319 non-null   object
+     6   WindAvgMPH                 1319 non-null   object
+     7   WindGustMPH                1319 non-null   object
+     8   PrecipitationSumInches     1319 non-null   object
+     9   Events                     1319 non-null   object
+    dtypes: int64(1), object(9)
+    memory usage: 113.4+ KB
+
+
+
+```python
 # Data plot
 data["TempAvgF"].plot(figsize=(15, 5), title='Avg. Temperature in Farenheit')
 plt.show()
@@ -238,7 +378,7 @@ plt.show()
 
 
     
-![](images/output_7_0.png)
+![png](output_9_0.png)
     
 
 
@@ -251,7 +391,7 @@ plt.show()
 
 
     
-![](images/output_8_0.png)
+![png](output_10_0.png)
     
 
 
@@ -313,25 +453,6 @@ data["Events"].unique()
 
 ```python
 """
-TempHighF, TempAvgF, TempLowF columns
-"""
-
-data[['TempHighF', 'TempAvgF', 'TempLowF']].isnull().sum()
-```
-
-
-
-
-    TempHighF    0
-    TempAvgF     0
-    TempLowF     0
-    dtype: int64
-
-
-
-
-```python
-"""
 Numerical columns encoded as strings:
     We should be careful using the pandas method .isnull() for numerical columns 
     were the data is encoded as strings. In this particular dataset missing values 
@@ -341,7 +462,7 @@ Numerical columns encoded as strings:
 
 cols = data.columns.to_list()
 cols_to_exclude = [
-    'Date', 'TempHighF', 'TempAvgF', 'TempLowF', 'PrecipitationSumInches', 'Events'
+    'TempAvgF', 'PrecipitationSumInches', 'Events'
 ]
 cols_to_transfor_to_numeric = [col for col in cols if col not in cols_to_exclude]
 
@@ -349,18 +470,10 @@ for col in cols_to_transfor_to_numeric:
     print(f"{col}: {data[col][data[col] == '-'].count()}")
 ```
 
-    DewPointHighF: 7
     DewPointAvgF: 7
-    DewPointLowF: 7
-    HumidityHighPercent: 2
     HumidityAvgPercent: 2
-    HumidityLowPercent: 2
-    SeaLevelPressureHighInches: 3
     SeaLevelPressureAvgInches: 3
-    SeaLevelPressureLowInches: 3
-    VisibilityHighMiles: 12
     VisibilityAvgMiles: 12
-    VisibilityLowMiles: 12
     WindHighMPH: 2
     WindAvgMPH: 2
     WindGustMPH: 4
@@ -403,21 +516,13 @@ data[cols_to_transfor_to_numeric].isnull().sum()
 
 
 
-    DewPointHighF                  7
-    DewPointAvgF                   7
-    DewPointLowF                   7
-    HumidityHighPercent            2
-    HumidityAvgPercent             2
-    HumidityLowPercent             2
-    SeaLevelPressureHighInches     3
-    SeaLevelPressureAvgInches      3
-    SeaLevelPressureLowInches      3
-    VisibilityHighMiles           12
-    VisibilityAvgMiles            12
-    VisibilityLowMiles            12
-    WindHighMPH                    2
-    WindAvgMPH                     2
-    WindGustMPH                    4
+    DewPointAvgF                  7
+    HumidityAvgPercent            2
+    SeaLevelPressureAvgInches     3
+    VisibilityAvgMiles           12
+    WindHighMPH                   2
+    WindAvgMPH                    2
+    WindGustMPH                   4
     dtype: int64
 
 
@@ -475,13 +580,13 @@ plt.show()
 
 
     
-![](images/output_20_0.png)
+![png](output_21_0.png)
     
 
 
 
     
-![](images/output_20_1.png)
+![png](output_21_1.png)
     
 
 
@@ -497,7 +602,7 @@ plt.show()
 
 
     
-![](images/output_21_0.png)
+![png](output_22_0.png)
     
 
 
@@ -520,7 +625,7 @@ plt.show()
 
 
     
-![](images/output_22_0.png)
+![png](output_23_0.png)
     
 
 
@@ -531,13 +636,13 @@ plt.show()
 """
 Heatmap
 """
-sns.heatmap(data.corr())
+sns.heatmap(data.corr(), annot=True)
 plt.show()
 ```
 
 
     
-![](images/output_24_0.png)
+![png](output_25_0.png)
     
 
 
@@ -546,12 +651,8 @@ plt.show()
 
 ```python
 numeric_cols = [
-    'TempHighF',
-    'TempAvgF',
-    'TempLowF',
-    'DewPointHighF',
-    'DewPointAvgF',
-    'DewPointLowF'
+    'TempAvgF', 'DewPointAvgF', 'HumidityAvgPercent', 
+    'SeaLevelPressureAvgInches', 'VisibilityAvgMiles'
 ]
 
 g = sns.PairGrid(data[numeric_cols])
@@ -562,23 +663,20 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fde95f80cc0>
+    <seaborn.axisgrid.PairGrid at 0x7f0d72f419e8>
 
 
 
 
     
-![](images/output_26_1.png)
+![png](output_27_1.png)
     
 
 
 
 ```python
 numeric_cols = [
-    'TempAvgF',
-    'HumidityHighPercent',
-    'HumidityAvgPercent',
-    'HumidityLowPercent',
+    'TempAvgF',  'WindHighMPH', 'WindAvgMPH', 'WindGustMPH', 'PrecipitationSumInches'
 ]
 
 g = sns.PairGrid(data[numeric_cols])
@@ -589,71 +687,13 @@ g.map_offdiag(sns.scatterplot)
 
 
 
-    <seaborn.axisgrid.PairGrid at 0x7fde94681a58>
+    <seaborn.axisgrid.PairGrid at 0x7f0d7172e668>
 
 
 
 
     
-![](images/output_27_1.png)
-    
-
-
-
-```python
-numeric_cols = [
-    'TempAvgF',
-    'SeaLevelPressureHighInches',
-    'SeaLevelPressureAvgInches',
-    'SeaLevelPressureLowInches',
-    'VisibilityHighMiles',
-    'VisibilityAvgMiles',
-    'VisibilityLowMiles'
-]
-
-g = sns.PairGrid(data[numeric_cols])
-g.map_diag(sns.histplot)
-g.map_offdiag(sns.scatterplot)
-```
-
-
-
-
-    <seaborn.axisgrid.PairGrid at 0x7fde933bc908>
-
-
-
-
-    
-![](images/output_28_1.png)
-    
-
-
-
-```python
-numeric_cols = [
-    'TempAvgF',
-    'WindHighMPH',
-    'WindAvgMPH',
-    'WindGustMPH',
-    'PrecipitationSumInches'
-]
-
-g = sns.PairGrid(data[numeric_cols])
-g.map_diag(sns.histplot)
-g.map_offdiag(sns.scatterplot)
-```
-
-
-
-
-    <seaborn.axisgrid.PairGrid at 0x7fde8fe7beb8>
-
-
-
-
-    
-![](images/output_29_1.png)
+![png](output_28_1.png)
     
 
 
@@ -665,6 +705,7 @@ g.map_offdiag(sns.scatterplot)
 label = 'TempAvgF'
 features = data.columns.tolist()
 features.remove(label)
+
 X = data[features]
 y = data[label]
 X_train, X_test, y_train, y_test = train_test_split(
@@ -682,7 +723,7 @@ plt.show()
 
 
     
-![](images/output_31_0.png)
+![png](output_30_0.png)
     
 
 
@@ -700,8 +741,8 @@ reg = xgb.XGBRegressor(base_score=0.5, booster='gbtree',
 reg.fit(X_train, y_train)
 ```
 
-    [17:05:17] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
-    [17:05:17] WARNING: ../src/learner.cc:576: 
+    [12:40:42] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
+    [12:40:42] WARNING: ../src/learner.cc:576: 
     Parameters: { "early_stopping_rounds" } might not be used.
     
       This could be a false alarm, with some parameters getting used by language bindings but
@@ -740,7 +781,7 @@ fi.sort_values(by='Importance', ascending=False)
 
 
     
-![](images/output_33_0.png)
+![png](output_32_0.png)
     
 
 
@@ -774,80 +815,44 @@ fi.sort_values(by='Importance', ascending=False)
   </thead>
   <tbody>
     <tr>
-      <th>TempLowF</th>
-      <td>2852.476807</td>
-    </tr>
-    <tr>
-      <th>TempHighF</th>
-      <td>1948.614380</td>
-    </tr>
-    <tr>
-      <th>WindHighMPH</th>
-      <td>5.346092</td>
-    </tr>
-    <tr>
-      <th>SeaLevelPressureAvgInches</th>
-      <td>5.065269</td>
-    </tr>
-    <tr>
       <th>DewPointAvgF</th>
-      <td>4.841939</td>
-    </tr>
-    <tr>
-      <th>DewPointHighF</th>
-      <td>4.246740</td>
+      <td>3289.620117</td>
     </tr>
     <tr>
       <th>HumidityAvgPercent</th>
-      <td>4.043171</td>
-    </tr>
-    <tr>
-      <th>VisibilityAvgMiles</th>
-      <td>3.772969</td>
-    </tr>
-    <tr>
-      <th>VisibilityHighMiles</th>
-      <td>3.277313</td>
-    </tr>
-    <tr>
-      <th>SeaLevelPressureLowInches</th>
-      <td>2.765399</td>
+      <td>435.336914</td>
     </tr>
     <tr>
       <th>Rain</th>
-      <td>2.146742</td>
+      <td>254.712479</td>
     </tr>
     <tr>
-      <th>HumidityLowPercent</th>
-      <td>1.449736</td>
-    </tr>
-    <tr>
-      <th>VisibilityLowMiles</th>
-      <td>1.237300</td>
-    </tr>
-    <tr>
-      <th>HumidityHighPercent</th>
-      <td>1.188487</td>
-    </tr>
-    <tr>
-      <th>SeaLevelPressureHighInches</th>
-      <td>1.075164</td>
-    </tr>
-    <tr>
-      <th>WindGustMPH</th>
-      <td>1.068728</td>
-    </tr>
-    <tr>
-      <th>DewPointLowF</th>
-      <td>0.906050</td>
+      <th>SeaLevelPressureAvgInches</th>
+      <td>223.630096</td>
     </tr>
     <tr>
       <th>PrecipitationSumInches</th>
-      <td>0.757577</td>
+      <td>196.618988</td>
+    </tr>
+    <tr>
+      <th>VisibilityAvgMiles</th>
+      <td>135.365005</td>
+    </tr>
+    <tr>
+      <th>WindHighMPH</th>
+      <td>30.398726</td>
+    </tr>
+    <tr>
+      <th>WindGustMPH</th>
+      <td>20.418079</td>
+    </tr>
+    <tr>
+      <th>Fog</th>
+      <td>15.400835</td>
     </tr>
     <tr>
       <th>WindAvgMPH</th>
-      <td>0.676285</td>
+      <td>12.347539</td>
     </tr>
   </tbody>
 </table>
@@ -863,6 +868,9 @@ fi.sort_values(by='Importance', ascending=False)
 predictions = reg.predict(X_test)
 y_pred = pd.DataFrame(data=predictions, index=y_test.index, columns=['Predictions'])
 
+score = mean_absolute_error(y_test.values, y_pred.values)
+print(f'MAE Score on the Test set: {score:0.2f}')
+
 fig, ax = plt.subplots(figsize=(15, 5))
 y_test.plot(ax=ax, label='Test Set')
 y_pred.plot(ax=ax, label='Predictions')
@@ -870,19 +878,13 @@ ax.legend(['Test Set', 'Predictions'])
 plt.show()
 ```
 
+    MAE Score on the Test set: 1.72
+
+
 
     
-![](images/output_35_0.png)
+![png](output_34_1.png)
     
-
-
-
-```python
-score = mean_absolute_error(y_test.values, y_pred.values)
-print(f'MAE Score on Test set: {score:0.2f}')
-```
-
-    MAE Score on Test set: 0.42
 
 
 ## 5. CONCLUSION 
