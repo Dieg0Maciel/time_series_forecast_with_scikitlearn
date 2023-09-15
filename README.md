@@ -51,7 +51,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.model_selection import cross_val_score, KFold, TimeSeriesSplit, train_test_split
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 # Skforecast
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
@@ -59,6 +59,8 @@ from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
 from skforecast.ForecasterAutoregDirect import ForecasterAutoregDirect
 from skforecast.model_selection import grid_search_forecaster, backtesting_forecaster
 from skforecast.utils import save_forecaster, load_forecaster
+
+sns.set_theme(style="whitegrid", palette=None)
 ```
 
 
@@ -557,24 +559,11 @@ data.drop('Events', inplace=True, axis=1)
 ```python
 period = 365 # in days
 
-# Multiplicative Decomposition 
+"""Multiplicative Decomposition"""
 multiplicative_decomposition = seasonal_decompose(
     data["TempAvgF"], model="multiplicative", period=period
 )
-
-# Additive Decomposition 
-additive_decomposition = seasonal_decompose(
-    data["TempAvgF"], model="additive", period=period
-)
-
-#Plot
-plt.rcParams.update({'figure.figsize': (16,12)})
-multiplicative_decomposition.plot().suptitle('Multiplicative Decomposition', fontsize=16)
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
-additive_decomposition.plot().suptitle('Additive Decomposition', fontsize=16)
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
+multiplicative_decomposition.plot()
 plt.show()
 ```
 
@@ -585,18 +574,13 @@ plt.show()
 
 
 
-    
-![](images/output_21_1.png)
-    
-
-
-
 ```python
-"""
-Autocorrelation Function (ACF) plot.
-"""
-plt.rcParams.update({'figure.figsize':(10,6), 'figure.dpi':120})
-autocorrelation_plot(data["TempAvgF"].tolist())
+"""Additive Decomposition """
+additive_decomposition = seasonal_decompose(
+    data["TempAvgF"], model="additive", period=period
+)
+
+additive_decomposition.plot()
 plt.show()
 ```
 
@@ -608,9 +592,21 @@ plt.show()
 
 
 ```python
-"""
-Lag Plots
-"""
+""" Autocorrelation Function """
+plt.figure(figsize=(15,5))
+autocorrelation_plot(data["TempAvgF"].tolist())
+plt.show()
+```
+
+
+    
+![](images/output_23_0.png)
+    
+
+
+
+```python
+""" Lag Plots """
 plt.rcParams.update({'ytick.left' : False, 'axes.titlepad':10})
 
 # Plot
@@ -625,7 +621,7 @@ plt.show()
 
 
     
-![](images/output_23_0.png)
+![](images/output_24_0.png)
     
 
 
@@ -636,13 +632,14 @@ plt.show()
 """
 Heatmap
 """
+plt.figure(figsize=(20,20))
 sns.heatmap(data.corr(), annot=True)
 plt.show()
 ```
 
 
     
-![](images/output_25_0.png)
+![](images/output_26_0.png)
     
 
 
@@ -658,18 +655,12 @@ numeric_cols = [
 g = sns.PairGrid(data[numeric_cols])
 g.map_diag(sns.histplot)
 g.map_offdiag(sns.scatterplot)
+plt.show()
 ```
 
 
-
-
-    <seaborn.axisgrid.PairGrid at 0x7f0d72f419e8>
-
-
-
-
     
-![](images/output_27_1.png)
+![](images/output_28_0.png)
     
 
 
@@ -682,18 +673,43 @@ numeric_cols = [
 g = sns.PairGrid(data[numeric_cols])
 g.map_diag(sns.histplot)
 g.map_offdiag(sns.scatterplot)
+plt.show()
 ```
 
 
+    
+![](images/output_29_0.png)
+    
 
 
-    <seaborn.axisgrid.PairGrid at 0x7f0d7172e668>
+#### Boxplots
 
 
+```python
+bxplot_cols = [
+    'TempAvgF', 'DewPointAvgF', 'HumidityAvgPercent',
+    'WindHighMPH', 'WindAvgMPH', 'WindGustMPH', 'VisibilityAvgMiles', 'PrecipitationSumInches'
+]
+plt.figure(figsize=(15,15))
+sns.boxplot(data=data[bxplot_cols], orient="h")
+plt.show()
+```
 
 
     
-![](images/output_28_1.png)
+![](images/output_31_0.png)
+    
+
+
+
+```python
+sns.boxplot(data=data[['SeaLevelPressureAvgInches',]], orient="h")
+plt.show()
+```
+
+
+    
+![](images/output_32_0.png)
     
 
 
@@ -723,26 +739,85 @@ plt.show()
 
 
     
-![](images/output_30_0.png)
+![](images/output_34_0.png)
     
 
 
 
 ```python
-""" Model"""
-reg = xgb.XGBRegressor(base_score=0.5, booster='gbtree',    
-                       n_estimators=1000,
-                       early_stopping_rounds=50,
-                       objective='reg:linear',
-                       max_depth=3,
-                       learning_rate=0.01)
+"""Preprocessing""" 
+scaler = StandardScaler()
+imputer = SimpleImputer(missing_values=np.NaN, strategy='median')
+num_cols = make_column_selector(dtype_include='number')
+preprocessor = make_column_transformer(
+    (make_pipeline(imputer, scaler), num_cols))
 
-"""Training"""
-reg.fit(X_train, y_train)
+""" Models"""
+# Linear regression
+lin_reg = LinearRegression()
+
+# Linear regression with gradient boosting
+xgb_reg = xgb.XGBRegressor(
+    base_score=0.5, 
+    booster='gbtree',    
+    n_estimators=1000,
+    early_stopping_rounds=50,
+    objective='reg:linear',
+    max_depth=3,
+    learning_rate=0.01
+)
+
+# Random Forest
+rforest_reg = RandomForestRegressor()
 ```
 
-    [12:40:42] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
-    [12:40:42] WARNING: ../src/learner.cc:576: 
+
+```python
+"""Feature importance for xgboost"""
+xgb_reg.fit(X_train, y_train)
+feat_imp = xgb_reg.get_booster().get_score(importance_type='gain')
+feat_importance = pd.DataFrame(
+    data={'Importance':list(feat_imp.values())}, 
+    index=list(feat_imp.keys())
+)
+
+feat_importance.sort_values('Importance').plot(
+    kind='barh', title='Feature Importance', figsize=(15,10)
+)
+plt.show()
+```
+
+    [16:07:00] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
+    [16:07:00] WARNING: ../src/learner.cc:576: 
+    Parameters: { "early_stopping_rounds" } might not be used.
+    
+      This could be a false alarm, with some parameters getting used by language bindings but
+      then being mistakenly passed down to XGBoost core, or some parameter actually being used
+      but getting flagged wrongly here. Please open an issue if you find any such cases.
+    
+    
+
+
+
+    
+![](images/output_36_1.png)
+    
+
+
+
+```python
+"""Training"""
+lin_pipeline = make_pipeline(preprocessor, lin_reg)
+xgb_pipeline = make_pipeline(preprocessor, xgb_reg)
+rforest_pipeline = make_pipeline(preprocessor, rforest_reg)
+
+lin_pipeline.fit(X_train, y_train)
+xgb_pipeline.fit(X_train, y_train)
+rforest_pipeline.fit(X_train, y_train)
+```
+
+    [16:07:03] WARNING: ../src/objective/regression_obj.cu:188: reg:linear is now deprecated in favor of reg:squarederror.
+    [16:07:03] WARNING: ../src/learner.cc:576: 
     Parameters: { "early_stopping_rounds" } might not be used.
     
       This could be a false alarm, with some parameters getting used by language bindings but
@@ -755,108 +830,14 @@ reg.fit(X_train, y_train)
 
 
 
-    XGBRegressor(base_score=0.5, booster='gbtree', colsample_bylevel=1,
-                 colsample_bynode=1, colsample_bytree=1, early_stopping_rounds=50,
-                 enable_categorical=False, gamma=0, gpu_id=-1, importance_type=None,
-                 interaction_constraints='', learning_rate=0.01, max_delta_step=0,
-                 max_depth=3, min_child_weight=1, missing=nan,
-                 monotone_constraints='()', n_estimators=1000, n_jobs=4,
-                 num_parallel_tree=1, objective='reg:linear', predictor='auto',
-                 random_state=0, reg_alpha=0, reg_lambda=1, scale_pos_weight=1,
-                 subsample=1, tree_method='exact', validate_parameters=1,
-                 verbosity=None)
-
-
-
-
-```python
-"""Feature Importance"""
-feat_imp = reg.get_booster().get_score(importance_type='gain')
-fi = pd.DataFrame({'Features':list(feat_imp.keys()), 'Importance':list(feat_imp.values())})
-fi = fi.set_index('Features')
-fi.sort_values('Importance').plot(kind='barh', title='Feature Importance')
-plt.show()
-fi.sort_values(by='Importance', ascending=False)
-```
-
-
-    
-![](images/output_32_0.png)
-    
-
-
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Importance</th>
-    </tr>
-    <tr>
-      <th>Features</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>DewPointAvgF</th>
-      <td>3289.620117</td>
-    </tr>
-    <tr>
-      <th>HumidityAvgPercent</th>
-      <td>435.336914</td>
-    </tr>
-    <tr>
-      <th>Rain</th>
-      <td>254.712479</td>
-    </tr>
-    <tr>
-      <th>SeaLevelPressureAvgInches</th>
-      <td>223.630096</td>
-    </tr>
-    <tr>
-      <th>PrecipitationSumInches</th>
-      <td>196.618988</td>
-    </tr>
-    <tr>
-      <th>VisibilityAvgMiles</th>
-      <td>135.365005</td>
-    </tr>
-    <tr>
-      <th>WindHighMPH</th>
-      <td>30.398726</td>
-    </tr>
-    <tr>
-      <th>WindGustMPH</th>
-      <td>20.418079</td>
-    </tr>
-    <tr>
-      <th>Fog</th>
-      <td>15.400835</td>
-    </tr>
-    <tr>
-      <th>WindAvgMPH</th>
-      <td>12.347539</td>
-    </tr>
-  </tbody>
-</table>
-</div>
+    Pipeline(steps=[('columntransformer',
+                     ColumnTransformer(transformers=[('pipeline',
+                                                      Pipeline(steps=[('simpleimputer',
+                                                                       SimpleImputer(strategy='median')),
+                                                                      ('standardscaler',
+                                                                       StandardScaler())]),
+                                                      <sklearn.compose._column_transformer.make_column_selector object at 0x7f98e08a6780>)])),
+                    ('randomforestregressor', RandomForestRegressor())])
 
 
 
@@ -864,12 +845,33 @@ fi.sort_values(by='Importance', ascending=False)
 
 
 ```python
+"""Cross Validation"""
+time_split = TimeSeriesSplit(n_splits=5)
+lin_score = cross_val_score(
+    lin_pipeline, X_train, y_train, cv=time_split, scoring = 'r2', n_jobs =1
+).mean()
+
+print(f'Cross-Validation for linear regression -- r2 Score on the Test set: {lin_score:0.2f}')
+
+rforest_score = cross_val_score(
+    rforest_pipeline, X_train, y_train, cv=time_split, scoring = 'r2', n_jobs =1
+).mean()
+
+print(f'Cross-Validation for random forest -- r2 Score on the Test set: {rforest_score:0.2f}')
+```
+
+    Cross-Validation for linear regression -- r2 Score on the Test set: 0.94
+    Cross-Validation for random forest -- r2 Score on the Test set: 0.89
+
+
+
+```python
 """Predictions"""
-predictions = reg.predict(X_test)
+predictions = xgb_pipeline.predict(X_test)
 y_pred = pd.DataFrame(data=predictions, index=y_test.index, columns=['Predictions'])
 
-score = mean_absolute_error(y_test.values, y_pred.values)
-print(f'MAE Score on the Test set: {score:0.2f}')
+score = r2_score(y_test.values, y_pred.values)
+print(f'r2 Score on the Test set: {score:0.2f}')
 
 fig, ax = plt.subplots(figsize=(15, 5))
 y_test.plot(ax=ax, label='Test Set')
@@ -878,12 +880,12 @@ ax.legend(['Test Set', 'Predictions'])
 plt.show()
 ```
 
-    MAE Score on the Test set: 1.72
+    r2 Score on the Test set: 0.96
 
 
 
     
-![](images/output_34_1.png)
+![](images/output_40_1.png)
     
 
 
@@ -892,7 +894,7 @@ plt.show()
 ## 6. FUTURE WORK
 
 ## 7. REFERENCES
-
+* [Time Series Analysis](https://www.youtube.com/watch?v=uBeM1FUk4Ps)
 * [Temperature prediction time series](https://www.kaggle.com/code/tudorpreduna/temperature-pred-time-series)
 * [Time Series Forecasting with XGBoost](https://www.youtube.com/watch?v=vV12dGe_Fho)
 * [Finding Seasonal Trends in Time-Series Data with Python](https://towardsdatascience.com/finding-seasonal-trends-in-time-series-data-with-python-ce10c37aa861)
