@@ -362,19 +362,32 @@ $v = [v[0],\cdots,v[i],\cdots,v[\text{len}(v)-1]]$
 we can consider an index $j$ going from right to left such that
 $$ v[i] = v[\text{len}(v)-1-j]\quad\Longrightarrow\quad i = \text{len}(v)-1-j $$
 Consider the contiguous subarray of $v$ with lenght $d$
+
 $$ v[k],\cdots,v[i] $$
+
 the indices $k$ and $i$ satisfy the relation
+
 $$ i - k = d - 1 $$
+
 which leads to
-$$ k = \text{len}(v)-j-d $$
+
+$k = \text{len}(v)-j-d$
+
 This allows us to write the subarray as
-$$ v[\text{len}(v)-j-d],\cdots,v[\text{len}(v)-1-j ] $$
+
+$v[\text{len}(v)-j-d],\cdots,v[\text{len}(v)-1-j ]$
+
 Using Python slicing we can write the subarray as
-$$ \text{subarray} = v[\text{len}(v)-j-d:\text{len}(v)-j ] $$
+
+$\text{subarray} = v[\text{len}(v)-j-d:\text{len}(v)-j ]$
+
 or equivalently
-$$ \text{subarray} = v[-(j+1+d):-(j+1) ] $$
+
+$\text{subarray} = v[-(j+1+d):-(j+1) ]$
+
 Considering $period=j+1+d$ leads to
-$$ \text{subarray} = v[-period:-period+d ] $$
+
+$\text{subarray} = v[-period:-period+d ]$
 
 
 ```python
