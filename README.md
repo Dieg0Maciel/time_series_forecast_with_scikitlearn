@@ -350,7 +350,7 @@ arima_model.summary()
 <tr>
   <th>Prob(H) (two-sided):</th>    <td>0.74</td> <th>  Kurtosis:          </th>  <td>4.64</td> 
 </tr>
-
+</table>
 
 
 
