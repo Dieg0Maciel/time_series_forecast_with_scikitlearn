@@ -23,7 +23,7 @@ We will divide the data in a training and test sets and train each model on the 
 * Afterward we are going to analyse the components of the time series in order to transform the data to apply the ARIMA model. 
 * Using feature engineering we are going to prepare input data and use the time series as labels for a supervised machine learning model (random forest regressor).
 
-
+Finally, we will compare a forecast made with each model for dates outside the dataset.
 
 # 
 
@@ -198,6 +198,14 @@ Since the ADF value is greater than the critical value we maintain the null hypo
 
 ### Differencing
 
+Diferencing consist in the transformation
+
+$$ y_{\text{diff}}(t) = y(t) - y(t - \text{lag}) $$
+
+the inverse transform is
+
+$$ y(t) = y_{\text{diff}}(t) + y(t - \text{lag}) $$
+
 
 ```python
 # We differencing with a time lag equal to the period
@@ -269,20 +277,20 @@ arima_model.summary()
 ```
 
     Performing stepwise search to minimize aic
-     ARIMA(2,0,2)(0,0,0)[0] intercept   : AIC=6208.579, Time=0.42 sec
+     ARIMA(2,0,2)(0,0,0)[0] intercept   : AIC=6208.579, Time=0.69 sec
      ARIMA(0,0,0)(0,0,0)[0] intercept   : AIC=6775.527, Time=0.03 sec
      ARIMA(1,0,0)(0,0,0)[0] intercept   : AIC=6267.279, Time=0.07 sec
      ARIMA(0,0,1)(0,0,0)[0] intercept   : AIC=6305.052, Time=0.11 sec
      ARIMA(0,0,0)(0,0,0)[0]             : AIC=6796.191, Time=0.02 sec
-     ARIMA(1,0,2)(0,0,0)[0] intercept   : AIC=6208.464, Time=0.41 sec
-     ARIMA(0,0,2)(0,0,0)[0] intercept   : AIC=6212.963, Time=0.20 sec
-     ARIMA(1,0,1)(0,0,0)[0] intercept   : AIC=6208.108, Time=0.17 sec
-     ARIMA(2,0,1)(0,0,0)[0] intercept   : AIC=6209.580, Time=0.29 sec
-     ARIMA(2,0,0)(0,0,0)[0] intercept   : AIC=6217.740, Time=0.17 sec
+     ARIMA(1,0,2)(0,0,0)[0] intercept   : AIC=6208.464, Time=0.29 sec
+     ARIMA(0,0,2)(0,0,0)[0] intercept   : AIC=6212.963, Time=0.18 sec
+     ARIMA(1,0,1)(0,0,0)[0] intercept   : AIC=6208.108, Time=0.16 sec
+     ARIMA(2,0,1)(0,0,0)[0] intercept   : AIC=6209.580, Time=0.27 sec
+     ARIMA(2,0,0)(0,0,0)[0] intercept   : AIC=6217.740, Time=0.15 sec
      ARIMA(1,0,1)(0,0,0)[0]             : AIC=6212.530, Time=0.06 sec
     
     Best model:  ARIMA(1,0,1)(0,0,0)[0] intercept
-    Total fit time: 1.976 seconds
+    Total fit time: 2.070 seconds
 
 
 
@@ -297,10 +305,10 @@ arima_model.summary()
   <th>Model:</th>           <td>SARIMAX(1, 0, 1)</td> <th>  Log Likelihood     </th> <td>-3100.054</td>
 </tr>
 <tr>
-  <th>Date:</th>            <td>Thu, 21 Sep 2023</td> <th>  AIC                </th> <td>6208.108</td> 
+  <th>Date:</th>            <td>Fri, 22 Sep 2023</td> <th>  AIC                </th> <td>6208.108</td> 
 </tr>
 <tr>
-  <th>Time:</th>                <td>15:21:59</td>     <th>  BIC                </th> <td>6227.423</td> 
+  <th>Time:</th>                <td>13:58:13</td>     <th>  BIC                </th> <td>6227.423</td> 
 </tr>
 <tr>
   <th>Sample:</th>             <td>12-21-2014</td>    <th>  HQIC               </th> <td>6215.477</td> 
@@ -346,6 +354,26 @@ arima_model.summary()
 
 
 
+#### Python array slicing for the inverse differencing transform
+Given the array
+$$ v = [v[0],\cdots,v[i],\cdots,v[\text{len}(v)-1]] $$
+we can consider an index $j$ going from right to left such that
+$$ v[i] = v[\text{len}(v)-1-j]\quad\Longrightarrow\quad i = \text{len}(v)-1-j $$
+Consider the contiguous subarray of $v$ with lenght $d$
+$$ v[k],\cdots,v[i] $$
+the indices $k$ and $i$ satisfy the relation
+$$ i - k = d - 1 $$
+which leads to
+$$ k = \text{len}(v)-j-d $$
+This allows us to write the subarray as
+$$ v[\text{len}(v)-j-d],\cdots,v[\text{len}(v)-1-j ] $$
+Using Python slicing we can write the subarray as
+$$ \text{subarray} = v[\text{len}(v)-j-d:\text{len}(v)-j ] $$
+or equivalently
+$$ \text{subarray} = v[-(j+1+d):-(j+1) ] $$
+Considering $period=j+1+d$ leads to
+$$ \text{subarray} = v[-period:-period+d ] $$
+
 
 ```python
 # Predictions
@@ -386,7 +414,7 @@ plt.show()
 
 
     
-![](images/output_19_1.png)
+![](images/output_20_1.png)
     
 
 
@@ -419,7 +447,7 @@ plt.show()
 
 
     
-![](images/output_22_0.png)
+![](images/output_23_0.png)
     
 
 
@@ -434,7 +462,7 @@ plt.show()
 
 
     
-![](images/output_23_0.png)
+![](images/output_24_0.png)
     
 
 
@@ -449,7 +477,7 @@ plt.show()
 
 
     
-![](images/output_24_0.png)
+![](images/output_25_0.png)
     
 
 
@@ -506,7 +534,7 @@ plt.show()
 
 
     
-![](images/output_27_0.png)
+![](images/output_28_0.png)
     
 
 
@@ -545,19 +573,127 @@ plt.show()
 
     
     Error Metrics:
-        * Root Mean Square Error: 2.618106822368662
-        * Mean Absolute Error: 1.8463333333333334
-        * R2 Score: -1.4431821782178216
+        * Root Mean Square Error: 2.633892556654503
+        * Mean Absolute Error: 1.8749999999999991
+        * R2 Score: -1.472733069306928
     
 
 
 
     
-![](images/output_29_1.png)
+![](images/output_30_1.png)
     
 
 
 We can see that the supervised learning model performs really well compared to the autoregression models.
+
+# 6. Forecast
+
+
+```python
+X = df[FEATURES]
+Y = df[TARGET]
+```
+
+
+```python
+# Training on the entire series
+ar_model = AutoReg(y, lags=10).fit()
+arima_model = auto_arima(y_diff, trace=True, supress_warnings=True)
+rforest_reg.fit(X, Y)
+```
+
+    /home/diego/anaconda3/envs/ML/lib/python3.7/site-packages/statsmodels/tsa/base/tsa_model.py:471: ValueWarning: No frequency information was provided, so inferred frequency D will be used.
+      self._init_dates(dates, freq)
+
+
+    Performing stepwise search to minimize aic
+     ARIMA(2,0,2)(0,0,0)[0] intercept   : AIC=6381.536, Time=0.54 sec
+     ARIMA(0,0,0)(0,0,0)[0] intercept   : AIC=6967.704, Time=0.03 sec
+     ARIMA(1,0,0)(0,0,0)[0] intercept   : AIC=6442.367, Time=0.08 sec
+     ARIMA(0,0,1)(0,0,0)[0] intercept   : AIC=6481.523, Time=0.13 sec
+     ARIMA(0,0,0)(0,0,0)[0]             : AIC=6989.098, Time=0.02 sec
+     ARIMA(1,0,2)(0,0,0)[0] intercept   : AIC=6381.541, Time=0.37 sec
+     ARIMA(2,0,1)(0,0,0)[0] intercept   : AIC=6382.671, Time=0.33 sec
+     ARIMA(3,0,2)(0,0,0)[0] intercept   : AIC=6373.749, Time=0.62 sec
+     ARIMA(3,0,1)(0,0,0)[0] intercept   : AIC=6372.123, Time=0.56 sec
+     ARIMA(3,0,0)(0,0,0)[0] intercept   : AIC=6375.177, Time=0.18 sec
+     ARIMA(4,0,1)(0,0,0)[0] intercept   : AIC=6373.802, Time=1.32 sec
+     ARIMA(2,0,0)(0,0,0)[0] intercept   : AIC=6391.203, Time=0.16 sec
+     ARIMA(4,0,0)(0,0,0)[0] intercept   : AIC=6372.108, Time=0.36 sec
+     ARIMA(5,0,0)(0,0,0)[0] intercept   : AIC=6373.831, Time=0.30 sec
+     ARIMA(5,0,1)(0,0,0)[0] intercept   : AIC=6375.798, Time=1.28 sec
+     ARIMA(4,0,0)(0,0,0)[0]             : AIC=6374.992, Time=0.11 sec
+    
+    Best model:  ARIMA(4,0,0)(0,0,0)[0] intercept
+    Total fit time: 6.403 seconds
+
+
+
+
+
+    RandomForestRegressor()
+
+
+
+
+```python
+# AR Forecast
+d = 30
+y_ar_forecast = ar_model.predict(start=len(y)+1, end=len(y)+d, dynamic=False)
+```
+
+    /home/diego/anaconda3/envs/ML/lib/python3.7/site-packages/statsmodels/tsa/deterministic.py:302: UserWarning: Only PeriodIndexes, DatetimeIndexes with a frequency set, RangesIndexes, and Index with a unit increment support extending. The index is set will contain the position relative to the data length.
+      fcast_index = self._extend_index(index, steps, forecast_index)
+
+
+
+```python
+# ARIMA Forecast
+y_arima_forecast = arima_model.predict(d)
+
+# Inverse transform
+y_diff_forecast = arima_model.predict(d)
+y_arima_forecast = y_diff_forecast.values + (y[-period:-period+d].T).values
+y_arima_forecast = pd.DataFrame(
+    y_arima_forecast.T, index=y_diff_forecast.index, columns=y_diff.columns
+)
+```
+
+
+```python
+#Create RandomForestRegressor Forecast imputs.
+X_forecast = pd.DataFrame()
+X_forecast.index = y_arima_forecast.index
+X_forecast['dayofweek'] = y_arima_forecast.index.dayofweek
+X_forecast['quarter'] = y_arima_forecast.index.quarter
+X_forecast['month'] = y_arima_forecast.index.month
+X_forecast['year'] = y_arima_forecast.index.year
+X_forecast['dayofyear'] = y_arima_forecast.index.dayofyear
+X_forecast['dayofmonth'] = y_arima_forecast.index.day
+X_forecast['weekofyear'] = y_arima_forecast.index.isocalendar().week
+
+# RandomForestRegressor Forecast
+Y_rfr_forecast = rforest_reg.predict(X_forecast)
+```
+
+
+```python
+# Plot forecast
+plt.figure(figsize=(15,5))
+plt.plot(y_ar_forecast.index, y_ar_forecast.T.values, ':r')
+plt.plot(y_ar_forecast.index, y_arima_forecast.T.values[0], '-.k')
+plt.plot(y_ar_forecast.index, Y_rfr_forecast, '--b')
+plt.legend(['Baseline AR', 'ARIMA', 'RandomForestRegressor'])
+plt.title("TempAvgF Forecast")
+plt.show()
+```
+
+
+    
+![](images/output_38_0.png)
+    
+
 
 # 7. Future Work
 * We can extend this dataset or create a dataset for another city using a weather API like [Weather API](https://www.weatherapi.com/) following the steps from the previous project [ETL PIPELINE WITH PYTHON AND AIRFLOW](https://github.com/Dieg0Maciel/etl_pipeline_with_python_and_airflow) where we studied how to build a pipeline in order to manipulate weather forecast data provided by the [Open Weather](https://openweathermap.org/) API. 
@@ -572,4 +708,3 @@ We can see that the supervised learning model performs really well compared to t
 * [Nachiketa Hebbar, *Time Series Forecasting*](https://www.youtube.com/playlist?list=PLqYFiz7NM_SMC4ZgXplbreXlRY4Jf4zBP)
 * [Rob Mulla, *Time Series Forecasting with Machine Learning [YT]*](https://www.kaggle.com/code/robikscube/time-series-forecasting-with-machine-learning-yt)
 * [Moez Ali, *Time Series Forecasting Tutorial*](https://www.datacamp.com/tutorial/tutorial-time-series-forecasting)
-
