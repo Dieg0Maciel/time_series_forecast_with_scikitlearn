@@ -350,11 +350,11 @@ arima_model.summary()
 <tr>
   <th>Prob(H) (two-sided):</th>    <td>0.74</td> <th>  Kurtosis:          </th>  <td>4.64</td> 
 </tr>
-</table><br/><br/>Warnings:<br/>[1] Covariance matrix calculated using the outer product of gradients (complex-step).
 
 
 
-#### Python array slicing for the inverse differencing transform
+
+### Python array slicing for the inverse differencing transform
 Given the array
 
 $$v = [v[0],\cdots,v[i],\cdots,v[\text{len}(v)-1]]$$
