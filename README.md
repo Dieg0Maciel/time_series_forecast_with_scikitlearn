@@ -356,7 +356,9 @@ arima_model.summary()
 
 #### Python array slicing for the inverse differencing transform
 Given the array
-$$ v = [v[0],\cdots,v[i],\cdots,v[\text{len}(v)-1]] $$
+
+$ v = [v[0],\cdots,v[i],\cdots,v[\text{len}(v)-1]] $
+
 we can consider an index $j$ going from right to left such that
 $$ v[i] = v[\text{len}(v)-1-j]\quad\Longrightarrow\quad i = \text{len}(v)-1-j $$
 Consider the contiguous subarray of $v$ with lenght $d$
